@@ -43,9 +43,11 @@ void RtcRobot::InitEngine() {
   engine_->setChannelProfile(agora::CHANNEL_PROFILE_LIVE_BROADCASTING);
 
   agora::rtc::VideoEncoderConfiguration config;
-  config.dimensions = agora::rtc::VideoDimensions(640, 360);
+  config.dimensions = agora::rtc::VideoDimensions(480, 360);
+  // in 4.x version sdk, there has a min bitrate by resolution
+  // if set two low here, will use a recommand bitrate
   config.bitrate = 800;
-  config.frameRate = 15;
+  config.frameRate = 10;
   engine_->setVideoEncoderConfiguration(config);
 
   // initialize media palyer

@@ -26,7 +26,7 @@ int main() {
   std::wstring source = WinIni::Read(ini_file, KEY_SECTION, KEY_SOURCE,
                                      std::wstring(L".\\test.mp4"));
   bool pub_audio = WinIni::Read(ini_file, KEY_SECTION, KEY_AUDIO, false);
-  bool pub_video = WinIni::Read(ini_file, KEY_SECTION, KEY_VIDEO, false);
+  bool pub_video = WinIni::Read(ini_file, KEY_SECTION, KEY_VIDEO, true);
 
   int elapsed =
       WinIni::Read(ini_file, KEY_SECTION, KEY_ELAPSED, 1000);  // seconds
@@ -39,6 +39,7 @@ int main() {
 
   std::wcout << L"initialize robot with" << L" rid:" << rid << L" prefix:"
              << prefix << L" elapsed:" << elapsed << L" source:" << source
+             << L" audio:" << pub_audio << L" video:" << pub_video
              << std::endl;
 
   RtcRobot(appid, rid, prefix, source, pub_audio, pub_video, elapsed).Run();
