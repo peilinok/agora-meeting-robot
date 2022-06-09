@@ -7,12 +7,13 @@
 
 RtcRobot::RtcRobot(const std::wstring& appid, const std::wstring& rid,
                    const std::wstring& prefix, const std::wstring& source,
-                   bool pub_audio, const int& elapsed)
+                   bool pub_audio, bool pub_video, const int& elapsed)
     : appid_(appid),
       rid_(rid),
       prefix_(prefix),
       source_(source),
       pub_audio_(pub_audio),
+      pub_video_(pub_video),
       elapsed_(elapsed) {
   InitEngine();
 }
@@ -69,7 +70,7 @@ void RtcRobot::JoinChannel() {
   // join channel
   agora::rtc::ChannelMediaOptions options;
   options.clientRoleType = agora::rtc::CLIENT_ROLE_BROADCASTER;
-  options.publishMediaPlayerVideoTrack = true;
+  options.publishMediaPlayerVideoTrack = pub_video_;
   options.publishMediaPlayerAudioTrack = pub_audio_;
   options.publishMediaPlayerId = player_->getMediaPlayerId();
   options.publishCameraTrack = false;

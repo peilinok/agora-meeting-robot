@@ -12,6 +12,7 @@ const wchar_t* KEY_ELAPSED = L"elapsed";
 const wchar_t* KEY_SOURCE = L"source";
 const wchar_t* KEY_APPID = L"appid";
 const wchar_t* KEY_AUDIO = L"audio";
+const wchar_t* KEY_VIDEO = L"video";
 
 int main() {
   const std::wstring ini_file(L".\\robot.ini");
@@ -25,6 +26,7 @@ int main() {
   std::wstring source = WinIni::Read(ini_file, KEY_SECTION, KEY_SOURCE,
                                      std::wstring(L".\\test.mp4"));
   bool pub_audio = WinIni::Read(ini_file, KEY_SECTION, KEY_AUDIO, false);
+  bool pub_video = WinIni::Read(ini_file, KEY_SECTION, KEY_VIDEO, false);
 
   int elapsed =
       WinIni::Read(ini_file, KEY_SECTION, KEY_ELAPSED, 1000);  // seconds
@@ -39,7 +41,7 @@ int main() {
              << prefix << L" elapsed:" << elapsed << L" source:" << source
              << std::endl;
 
-  RtcRobot(appid, rid, prefix, source, pub_audio, elapsed).Run();
+  RtcRobot(appid, rid, prefix, source, pub_audio, pub_video, elapsed).Run();
 
   return 0;
 }

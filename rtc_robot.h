@@ -11,7 +11,7 @@ class RtcRobot : public agora::rtc::IRtcEngineEventHandlerEx,
  public:
   RtcRobot(const std::wstring& appid, const std::wstring& rid,
            const std::wstring& prefix, const std::wstring& source,
-           bool pub_audio, const int& elapsed);
+           bool pub_audio, bool pub_video, const int& elapsed);
   ~RtcRobot();
 
   void Run();
@@ -55,6 +55,7 @@ class RtcRobot : public agora::rtc::IRtcEngineEventHandlerEx,
   std::wstring source_;
   int elapsed_;
   bool pub_audio_;
+  bool pub_video_;
 
   agora::rtc::IRtcEngine* engine_ = nullptr;
   agora::agora_refptr<agora::rtc::IMediaPlayer> player_ = nullptr;
