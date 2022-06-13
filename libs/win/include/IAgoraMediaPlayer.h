@@ -50,6 +50,7 @@ public:
   virtual int open(const char* url, int64_t startPos) = 0;
 
   /**
+   * @deprecated
    * @brief Open media file or stream with custom soucrce.
    * @param startPos Set the starting position for playback, in seconds
    * @param observer dataProvider object
@@ -57,7 +58,7 @@ public:
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int openWithCustomSource(int64_t startPos, IMediaPlayerCustomDataProvider* provider) = 0;
+  virtual int openWithCustomSource(int64_t startPos,  media::base::IMediaPlayerCustomDataProvider* provider) = 0;
 
   /**
    * @brief Open a media file with a media file source.
@@ -536,6 +537,21 @@ public:
    * - < 0: Failure.
    */
   virtual int setSpatialAudioParams(const SpatialAudioParams& params) = 0;
+
+  /**
+   * Set sound position params for the music file. It can be called after the media player
+   * was created.
+   *
+   *@param pan The sound position of the music file. The value ranges from -1.0 to 1.0:
+   *- 0.0: the music sound comes from the front.
+   *- -1.0: the music sound comes from the left.
+   *- 1.0: the music sound comes from the right.
+   *@param gain Gain of the music. The value ranges from 0.0 to 100.0. The default value is 100.0 (the original gain of the music). The smaller the value, the less the gain.
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int setSoundPositionParams(float pan, float gain) = 0;
 
 };
 

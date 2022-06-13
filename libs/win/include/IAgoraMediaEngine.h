@@ -6,7 +6,6 @@
 #pragma once
 
 #include <stdint.h>
-#include "IAgoraRtcEngine.h"
 #include "IAgoraRtcEngineEx.h"
 
 namespace agora {
@@ -34,7 +33,7 @@ class IMediaEngine {
    *
    * @note
    * - Ensure that you call this method before joining the channel.
-   * - If you register an observer for video raw video data, you cannot register an IVideoEncodedImageReceiver
+   * - If you register an observer for video raw video data, you cannot register an IVideoEncodedFrameObserver
    * object.
    *
    * @param observer A pointer to the video frame observer: IVideoFrameObserver.
@@ -49,17 +48,15 @@ class IMediaEngine {
    *
    * @note
    * - Ensure that you call this method before joining the channel.
-   * - If you register a receiver for encoded video data, you cannot register an IVideoFrameObserver
-   * object.
    *
-   * @param receiver A pointer to the receiver of the encoded video image: \ref rtc::IVideoEncodedImageReceiver 
-   * "IVideoEncodedImageReceiver".
+   * @param observer A pointer to the observer of the encoded video image: \ref IVideoEncodedFrameObserver
+   * "IVideoEncodedFrameObserver".
    *
    * @return
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int registerVideoEncodedImageReceiver(rtc::IVideoEncodedImageReceiver* receiver) = 0;
+  virtual int registerVideoEncodedFrameObserver(IVideoEncodedFrameObserver* observer) = 0;
 
   /** 
    * Pushes the external audio data to the app.
@@ -74,26 +71,6 @@ class IMediaEngine {
    */
   virtual int pushAudioFrame(MEDIA_SOURCE_TYPE type, IAudioFrameObserver::AudioFrame* frame,
                              bool wrap = false, int sourceId = 0) = 0;
-
-//  /**
-//   * Push the external audio data to the primary audio source.
-//   *
-//   * @param frame The audio buffer data.
-//   * @return
-//   * - 0: Success.
-//   * - < 0: Failure.
-//   */
-//  virtual int pushPrimaryAudioFrame(IAudioFrameObserver::AudioFrame* frame) = 0;
-//
-//  /**
-//   * Push the external audio data to the secondary audio source.
-//   *
-//   * @param frame The audio buffer data.
-//   * @return
-//   * - 0: Success.
-//   * - < 0: Failure.
-//   */
-//  virtual int pushSecondaryAudioFrame(IAudioFrameObserver::AudioFrame* frame) = 0;
 
   virtual int pushCaptureAudioFrame(IAudioFrameObserver::AudioFrame* frame) = 0;
 
@@ -148,7 +125,7 @@ class IMediaEngine {
    */
   virtual int setExternalVideoSource(
       bool enabled, bool useTexture, EXTERNAL_VIDEO_SOURCE_TYPE sourceType = VIDEO_FRAME,
-      rtc::EncodedVideoTrackOptions encodedVideoOption = rtc::EncodedVideoTrackOptions()) = 0;
+      rtc::SenderOptions encodedVideoOption = rtc::SenderOptions()) = 0;
 
   /** 
    * Sets the external audio source.
@@ -169,7 +146,36 @@ class IMediaEngine {
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int setExternalAudioSource(bool enabled, int sampleRate, int channels, int sourceNumber, bool localPlayback = false, bool publish = true) = 0;
+  virtual int setExternalAudioSource(bool enabled, int sampleRate, int channels, int sourceNumber = 1, bool localPlayback = false, bool publish = true) = 0;
+
+  /**
+   * Sets the external audio sink.
+   *
+   * This method applies to scenarios where you want to use external audio
+   * data for playback. After calling the \ref IRtcEngine::initialize "initialize"
+   * method and pass value of false in the `enableAudioDevice` member in the RtcEngineContext struct, you can call
+   * the \ref agora::media::IMediaEngine::pullAudioFrame "pullAudioFrame" method to pull the remote audio data, process
+   * it, and play it with the audio effects that you want.
+   *
+   * @note
+   * Once you call the \ref IRtcEngine::initialize "initialize" method and pass value of false in the `enableAudioDevice`
+   * member in the RtcEngineContext struct, the app will not retrieve any audio data from the
+   * \ref agora::media::IAudioFrameObserver::onPlaybackAudioFrame "onPlaybackAudioFrame" callback.
+   *
+   * @param enabled Sets whether or not to the external audio sink
+   * - true: Enables the external audio sink.
+   * - false: Disables the external audio sink.
+   * @param sampleRate Sets the sample rate (Hz) of the external audio sink, which can be set as 16000, 32000, 44100 or 48000.
+   * @param channels Sets the number of audio channels of the external
+   * audio sink:
+   * - 1: Mono.
+   * - 2: Stereo.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int setExternalAudioSink(bool enabled, int sampleRate, int channels) = 0;
 
   /**
    * Sets the external audio source.
@@ -189,7 +195,7 @@ class IMediaEngine {
 
   /**
    * @brief Enable/Disable the direct external audio source
-   *
+   * 
    * @param enable Determines whether to enable the direct external audio source
    * @param localPlayback Determines whether to enable the local playback of the direct external audio source
    * @return int
@@ -202,14 +208,11 @@ class IMediaEngine {
    * Pushes the external video frame to the app.
    *
    * @param frame The external video frame: ExternalVideoFrame.
-   * @param channelId The channel name.
-   * @param localUid ID of the local user.
-   * @return
+   * @param videoTrackId The id of the video track.
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int pushVideoFrame(base::ExternalVideoFrame* frame) = 0;
-  virtual int pushVideoFrame(base::ExternalVideoFrame* frame, const rtc::RtcConnection& connection) = 0;
+  virtual int pushVideoFrame(base::ExternalVideoFrame* frame, unsigned int videoTrackId = 0) = 0;
 
   /** 
    * Pushes the encoded video image to the app.
@@ -217,18 +220,13 @@ class IMediaEngine {
    * @param length The data length.
    * @param videoEncodedFrameInfo The reference to the information of the encoded video frame: 
    * \ref agora::rtc::EncodedVideoFrameInfo "EncodedVideoFrameInfo".
-   * @param channelId The channel name.
-   * @param localUid ID of the local user.
-   * @return
+   * @param videoTrackId The id of the video track.
    * - 0: Success.
    * - < 0: Failure.
    */
   virtual int pushEncodedVideoImage(const uint8_t* imageBuffer, size_t length,
-                                    const agora::rtc::EncodedVideoFrameInfo& videoEncodedFrameInfo) = 0;
-
-  virtual int pushEncodedVideoImage(const uint8_t* imageBuffer, size_t length,
                                     const agora::rtc::EncodedVideoFrameInfo& videoEncodedFrameInfo,
-                                    const rtc::RtcConnection& connection) = 0;
+                                    unsigned int videoTrackId = 0) = 0;
 
   virtual void release() = 0;
 

@@ -60,6 +60,18 @@ public:
   virtual int setDevice(const char deviceId[MAX_DEVICE_ID_LENGTH]) = 0;
 
   /**
+   * Gets the default audio device of the system (for macOS and Windows only).
+   *
+   * @param deviceName The name of the system default audio device.
+   * @param deviceId The device ID of the the system default audio device.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int getDefaultDevice(char deviceName[MAX_DEVICE_ID_LENGTH], char deviceId[MAX_DEVICE_ID_LENGTH]) = 0;
+
+  /**
    * Sets the volume of the app.
    *
    * @param volume The volume of the app. The value range is [0, 255].
@@ -398,6 +410,32 @@ public:
    * - < 0: Failure.
    */
   virtual int stopAudioDeviceLoopbackTest() = 0;
+
+  /** The status of following system default playback device.
+
+   @note The status of following system default playback device.
+
+   @param enable Variable to whether the current device follow system default playback device or not.
+   - true: The current device will change when the system default playback device changed.
+   - false: The current device will change only current device is removed.
+   @return
+   - 0: Success.
+   - < 0: Failure.
+   */
+  virtual int followSystemPlaybackDevice(bool enable) = 0;
+
+  /** The status of following system default recording device.
+
+   @note The status of following system default recording device.
+
+   @param enable Variable to whether the current device follow system default recording device or not.
+   - true: The current device will change when the system default recording device changed.
+   - false: The current device will change only current device is removed.
+   @return
+   - 0: Success.
+   - < 0: Failure.
+   */
+  virtual int followSystemRecordingDevice(bool enable) = 0;
 
   /**
    * Releases all IAudioDeviceManager resources.

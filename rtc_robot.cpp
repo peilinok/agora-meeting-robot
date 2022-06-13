@@ -76,7 +76,6 @@ void RtcRobot::JoinChannel() {
   options.publishMediaPlayerAudioTrack = pub_audio_;
   options.publishMediaPlayerId = player_->getMediaPlayerId();
   options.publishCameraTrack = false;
-  options.publishAudioTrack = false;
   options.autoSubscribeAudio = false;
   options.autoSubscribeVideo = false;
 

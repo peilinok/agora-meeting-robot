@@ -15,29 +15,29 @@
 
 namespace agora {
 namespace rtc {
-/** connection state of Spacial Audio Service
+/** connection state of Spacial Audio Engine
  */
 enum SAE_CONNECTION_STATE_TYPE {
-  /* The SDK is connecting to the game server. */
+  /* The SDK is connecting to the spatial audio server. */
   SAE_CONNECTION_STATE_CONNECTING = 0,
-  /* The SDK is connected to the game server. */
+  /* The SDK is connected to the spatial audio server. */
   SAE_CONNECTION_STATE_CONNECTED,
-  /* The SDK is disconnected from the game server. */
+  /* The SDK is disconnected from the spatial audio server. */
   SAE_CONNECTION_STATE_DISCONNECTED,
-  /* The SDK is reconnecting to the game server. */
+  /* The SDK is reconnecting to the spatial audio server. */
   SAE_CONNECTION_STATE_RECONNECTING,
-  /* The SDK is reconnected to the game server. */
+  /* The SDK is reconnected to the spatial audio server. */
   SAE_CONNECTION_STATE_RECONNECTED
 };
 
-/** reason of connection state change of GME
+/** reason of connection state change of Spatial Audio Engine
  */
 enum SAE_CONNECTION_CHANGED_REASON_TYPE {
   /* The connection state is changed. */
   SAE_CONNECTION_CHANGED_DEFAULT = 0,
-  /* The SDK is connecting to the game server. */
+  /* The SDK is connecting to the spatial audio server. */
   SAE_CONNECTION_CHANGED_CONNECTING,
-  /* The SDK fails to create the game room. */
+  /* The SDK fails to create the spatial audio room. */
   SAE_CONNECTION_CHANGED_CREATE_ROOM_FAIL,
   /* The SDK is disconnected from the Agora RTM system. */
   SAE_CONNECTION_CHANGED_RTM_DISCONNECT,
@@ -66,7 +66,7 @@ struct RemoteVoicePositionInfo {
   RemoteVoicePositionInfo() = default;
 };
 
-/** IP areas.
+/** The deploy region of spatial audio server.
  */
 enum SAE_DEPLOY_REGION {
     /**
@@ -87,13 +87,13 @@ enum SAE_DEPLOY_REGION {
     SAE_DEPLOY_REGION_AS = 0x00000008
 };
 
-/** The IGMEngineEventHandler class enables callbacks to your application.
+/** The ICloudSpatialAudioEventHandler class enables callbacks to your application.
  */
 class ICloudSpatialAudioEventHandler {
  public:
   virtual ~ICloudSpatialAudioEventHandler() {}
   /**
-   * Triggered when the current token will expire.
+   * Triggered when the current token expired.
    *
    * This callback notifies the app to renew the token. The app should retrieve a new token from
    * the server and call renewToken to pass the new token to the SDK. Failure to do so results in
@@ -103,8 +103,8 @@ class ICloudSpatialAudioEventHandler {
   /**
    * Occurs when the connection state between the SDK and the server changes.
    *
-   * @param state The current connection state. See #GME_CONNECTION_STATE_TYPE for all connection states.
-   * @param reason The reason causing the change of the connection state. See #GME_CONNECTION_CHANGED_REASON_TYPE
+   * @param state The current connection state. See #SAE_CONNECTION_STATE_TYPE for all connection states.
+   * @param reason The reason causing the change of the connection state. See #SAE_CONNECTION_CHANGED_REASON_TYPE
    * for all reasons.
    */
   virtual void onConnectionStateChange(SAE_CONNECTION_STATE_TYPE state, SAE_CONNECTION_CHANGED_REASON_TYPE reason) {}
@@ -113,7 +113,7 @@ class ICloudSpatialAudioEventHandler {
   virtual void onTeammateJoined(uid_t uid) {}
 };
 
-/** The definition of GMEngineContext
+/** The definition of CloudSpatialAudioConfig
  */
 struct CloudSpatialAudioConfig {
   /*The reference to \ref IRtcEngine, which is the base interface class of the Agora RTC SDK and provides
@@ -123,21 +123,19 @@ struct CloudSpatialAudioConfig {
   /** The SDK uses the eventHandler interface class to send callbacks to the app.
    */
   ICloudSpatialAudioEventHandler* eventHandler;
-  /** The App ID must be the same App ID used for initializing the IRtcEngine object.
+  /** The App ID is the one generating RTM token.
    */
   const char* appId;
   /**
-   * The region for connection. This advanced feature applies to scenarios that have regional restrictions.
+   * The region of spatial audio server which cloud spatial audio engine connect to.
    *
-   * For the regions that Agora supports, see #SAE_DEPLOY_REGION. The area codes support bitwise operation.
-   *
-   * After specifying the region, the SDK connects to the Agora servers within that region.
+   * For the regions that Agora supports, see #SAE_DEPLOY_REGION.
    */
   unsigned int deployRegion;
   CloudSpatialAudioConfig() : rtcEngine(NULL), eventHandler(NULL), appId(NULL), deployRegion(SAE_DEPLOY_REGION_CN) {}
 };
 
-/** The definition of GMEngineContext
+/** The definition of LocalSpatialAudioConfig
  */
 struct LocalSpatialAudioConfig {
   /*The reference to \ref IRtcEngine, which is the base interface class of the Agora RTC SDK and provides
@@ -148,7 +146,7 @@ struct LocalSpatialAudioConfig {
   LocalSpatialAudioConfig() : rtcEngine(NULL) {}
 };
 
-/** The IGameMediaEngine class provides the main methods that can be invoked by your application.
+/** The IBaseSpatialAudioEngine class provides the common methods of ICloudSpatialAudioEngine and ILocalSpatialAudioEngine.
  */
 class IBaseSpatialAudioEngine: public RefCountInterface {
  protected:
@@ -180,12 +178,10 @@ class IBaseSpatialAudioEngine: public RefCountInterface {
   virtual int setMaxAudioRecvCount(int maxCount) = 0;
   /**
    * This method sets the audio reception range. The unit of the audio reception range
-   * is the same as the unit of distance between game engines.
+   * is the same as the unit of distance in the game engine.
    *
    * @note You can call this method either before or after calling enterRoom.
    * During the game, you can call it multiple times to update the audio reception range.
-   * To implement the range audio and spatial sound effects, you must use this method together
-   * with `updateSelfPosition`.
    *
    * @param range The maximum audio reception range, in the unit of game engine distance.
    *
@@ -210,36 +206,35 @@ class IBaseSpatialAudioEngine: public RefCountInterface {
    */
   virtual int setDistanceUnit(float unit) = 0;
   /**
-   * Updates the sound source position of a player.
-   * When calling it in ICloudSpatialAudioEngine, it triggers the SDK to update the sound source position of the player to the Agora server. The Agora server uses the players' world coordinates and audio reception range to determine whether they are within each other's specified audio reception range.
-   * When calling it in ILocalSpatialAudioEngine, it triggers the SDK to calculate the relative position between the local and remote players and updates spatial audio parameters.
+   * Updates the position of local user.
+   * When calling it in ICloudSpatialAudioEngine, it triggers the SDK to update the user position to the Agora spatial audio server. The Agora spatial audio server uses the users' world coordinates and audio reception range to determine whether they are within each other's specified audio reception range.
+   * When calling it in ILocalSpatialAudioEngine, it triggers the SDK to calculate the relative position between the local and remote users and updates spatial audio parameters.
    *
    * when calling it in ICloudSpatialAudioEngine, you should notice:
    * @note
    * - Call the method after calling enterRoom.
    * - The call frequency is determined by the app. Agora recommends calling this method every
-   *   50 to 2000 ms. Otherwise, the SDK may lose synchronization with the server.
-   * - To use the range audio feature, you must call this method at least once after calling enterRoom.
+   *   120 to 7000 ms. Otherwise, the SDK may lose synchronization with the server.
    *
-   * @param position The sound position of the player. The coordinate order is forward, right, and up.
-   * @param axisForward The unit vector in the direction of the forward axis in the coordinate system.
-   * @param axisRight The unit vector in the direction of the right axis in the coordinate system.
-   * @param axisUp The unit vector in the direction of the up axis in the coordinate system.
+   * @param position The sound position of the user. The coordinate order is forward, right, and up.
+   * @param axisForward The vector in the direction of the forward axis in the coordinate system.
+   * @param axisRight The vector in the direction of the right axis in the coordinate system.
+   * @param axisUp The vector in the direction of the up axis in the coordinate system.
    * @return
    * - 0: Success.
    * - <0: Failure.
    */
   virtual int updateSelfPosition(float position[3], float axisForward[3], float axisRight[3], float axisUp[3]) = 0;
   /**
-   * Updates the sound source position of a player. This method is used in scene with multi RtcConnection.
+   * Updates the position of local user. This method is used in scene with multi RtcConnection.
    *
    * @note
    * - This method is only effective in ILocalSpatialAudioEngine currently.
    *
-   * @param position The sound position of the player. The coordinate order is forward, right, and up.
-   * @param axisForward The unit vector in the direction of the forward axis in the coordinate system.
-   * @param axisRight The unit vector in the direction of the right axis in the coordinate system.
-   * @param axisUp The unit vector in the direction of the up axis in the coordinate system.
+   * @param position The sound position of the user. The coordinate order is forward, right, and up.
+   * @param axisForward The vector in the direction of the forward axis in the coordinate system.
+   * @param axisRight The vector in the direction of the right axis in the coordinate system.
+   * @param axisUp The vector in the direction of the up axis in the coordinate system.
    * @param connection The RTC connection whose spatial audio effect you want to update.
    * @return
    * - 0: Success.
@@ -262,7 +257,7 @@ class IBaseSpatialAudioEngine: public RefCountInterface {
   virtual int updatePlayerPositionInfo(int playerId, const RemoteVoicePositionInfo& positionInfo) = 0;
 
   /**
-   * Set parameters for spatial audio engine. It's not deprecated for using.
+   * Set parameters for spatial audio engine. It's deprecated for using.
    *
    * @param params The parameter string.
    * @return
@@ -283,7 +278,7 @@ class IBaseSpatialAudioEngine: public RefCountInterface {
   /**
    * Mute all remote audio streams. It determines wether SDK receves remote audio streams or not.
    *
-   * @param mute When it's false, SDK will receve remote audio streams, otherwise SDK will not receve remote audio streams.
+   * @param mute When it's false, SDK will receive remote audio streams, otherwise SDK will not receive remote audio streams.
    * @return
    * - 0: Success.
    * - <0: Failure.
@@ -299,7 +294,7 @@ public:
   /**
    * Initializes the ICloudSpatialAudioEngine object and allocates the internal resources.
    *
-   * @note Ensure that you call createAgoraGameMediaEngine and initialize before calling any other ICloudSpatialAudioEngine APIs.
+   * @note Ensure that you call IRtcEngine::queryInterface and initialize before calling any other ICloudSpatialAudioEngine APIs.
    *
    * @param config The pointer to the CloudSpatialAudioConfig. See #CloudSpatialAudioConfig.
    *
@@ -329,19 +324,18 @@ public:
    */
   virtual int removeEventHandler(ICloudSpatialAudioEventHandler* eventHandler) = 0;
   /**
-   * This method enables the spatial sound effects.
+   * This method enables the spatial audio effects.
    *
    * @note
    * - You can call this method either before or after calling enterRoom.
-   * - Make sure `IRtcEngine::enableSoundPositionIndication` was called to use spacial audio feature.
    *
-   * @param enable Whether to enable the spatial sound effects for the players within a specified audio range:
-   * - true: Enable the spatial sound effects.
-   * - false: Disable the spatial sound effects.
+   * @param enable Whether to enable the spatial audio effects for the users within a specified audio range:
+   * - true: Enable the spatial audio effects.
+   * - false: Disable the spatial audio effects.
 
-   * @param applyToTeam Whether to enable the spatial sound effects for the players in a team:
-   * - true: Enable the spatial sound effects in a team.
-   * - false: Disable the spatial sound effects in a team.
+   * @param applyToTeam Whether to enable the spatial audio effects for the users in a team:
+   * - true: Enable the spatial audio effects in a team.
+   * - false: Disable the spatial audio effects in a team.
    *
    * @return
    * - 0: Success.
@@ -349,31 +343,29 @@ public:
    */
   virtual int enableSpatializer(bool enable, bool applyToTeam) = 0;
   /**
-   * Sets the team ID of a player.
+   * Sets the team ID of a user.
    *
-   * The team ID setting affects the sound reachability between players in a game room as follows:
-   * - The players with the same team ID are teammates. They can always hear each other, regardless of the audio mode and audio reception range.
-   * - The players with different team IDs are opponents. Whether they can hear each other depends on the audio mode and
-   *    audio reception range settings. For details, see Sound reachability between players.
+   * The team ID setting affects the sound reachability between users in a spatial audio room as follows:
+   * - The users with the same team ID are teammates. They can always hear each other, regardless of the audio mode and audio reception range.
+   * - The users with different team IDs are opponents. Whether they can hear each other depends on the audio mode and
+   *    audio reception range settings. For details, see Sound reachability between users.
    *
-   * @note Call this method before calling `IGameMediaEngine::enterRoom`. If you call
+   * @note Call this method before calling `ICloudSpatialAudioEngine::enterRoom`. If you call
    * this method after calling enterRoom, the SDK returns the error code -1.
    *
-   * @param teamID The ID of a team. The value must be greater than 0. Setting the parameter to 0 means not teaming up with other players.
+   * @param teamID The ID of a team. The value must be greater than 0. Setting the parameter to 0 means not teaming up with other users.
    * @return
    * - 0: Success.
    * - <0: Failure.
    */
   virtual int setTeamId(int teamId) = 0;
   /**
-   * Sets the audio mode of a player.
+   * Sets the audio range mode of a user.
    *
-   * @note You can call this method either before or after calling enterRoom:
-   * - Calling this method before enterRoom affects the audio mode the next time the player enters the room.
-   * - Calling this method after enterRoom changes the current audio mode of the player.
+   * @note You can call this method either before or after calling enterRoom
    *
-   * @param rangeMode The audio mode:
-   * - 0 : Everyone mode, in which the player can be heard by other players in the same room.
+   * @param rangeMode The audio range mode:
+   * - 0 : Everyone mode, in which the user can be heard by other users in the same room.
    * - 1: Team-only mode, in which only teammates can hear each other.
    * @return
    * - 0: Success.
@@ -381,14 +373,14 @@ public:
    */
   virtual int setAudioRangeMode(AUDIO_RANGE_MODE_TYPE rangeMode) = 0;
   /**
-   * Enters a game room.
+   * Enters a spatial audio room.
    *
    * @note
-   * - The range audio and spatial sound effects take effect after the method call of enterRoom.
+   * - The range audio and spatial audio effects take effect after the method call of enterRoom.
    * - Call this method after calling `IRtcEngine::joinChannel`.
    *
-   * @param token The token used for authentication. Ensure that the token used for entering
-   * the room is the same token used in joinChannel.
+   * @param token The token used for authentication. This is the RTM token generated with RTM user id "roomName+uid".
+   * The '+' here means string concatenation.
    *
    * @param roomName The room name, which must be the same as the channelName used in joinChannel.
    * @param uid The user ID. The uid must be unique and not be set to 0.
@@ -402,19 +394,15 @@ public:
    *
    * The app should retrieve a new token from the server and call this method to pass the new token
    * to the SDK. Otherwise, the SDK disconnects from the server when the token expires.
-   * You can use this method to replace renewToken of the IRtcEngine class.
    *
-   * @param token The new token. When generating the new token, ensure the following:
-   * - Generate the new token in the same way as you generate the token for `IRtcEngine::joinChannel`.
-   * - Add the permission to log into the Agora RTM system when generating Agora RTC token:
-   *    builder.addPrivilege(AccessToken.Privileges.kRtmLogin, privilegeTs);
+   * @param token The new RTM token. The token is generated in the same way as enterRoom.
    * @return
    * - 0: Success.
    * - <0: Failure.
    */
   virtual int renewToken(const char* token) = 0;
   /**
-   * Exits a game room.
+   * Exits a spatial audio room.
    *
    * @return 0: Success.
    */
@@ -431,7 +419,7 @@ public:
   /**
    * Initializes the ILocalSpatialAudioEngine object and allocates the internal resources.
    *
-   * @note Ensure that you call createAgoraGameMediaEngine and initialize before calling any other ILocalSpatialAudioEngine APIs.
+   * @note Ensure that you call IRtcEngine::queryInterface and initialize before calling any other ILocalSpatialAudioEngine APIs.
    *
    * @param config The pointer to the LocalSpatialAudioConfig. See #LocalSpatialAudioConfig.
    *
@@ -441,7 +429,7 @@ public:
    */
   virtual int initialize(const LocalSpatialAudioConfig& config) = 0;
   /**
-   * Updates the position information of remote user. You should call it when remote user whose role is broadcaster move.
+   * Updates the position information of remote user. You should call it when remote user whose role is broadcaster moves.
    *
    * @param uid The remote user ID. It should be the same as RTC channel remote user id.
    * @param posInfo The position information of remote user. See #RemoteVoicePositionInfo.
