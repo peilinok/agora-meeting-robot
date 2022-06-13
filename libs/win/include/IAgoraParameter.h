@@ -110,6 +110,23 @@
 #define KEY_RTC_AUDIO_OBOE_ENABLE                    "rtc.audio.oboe.enable"
 
 /**
+  * set loopback default output device name, empty by default 
+  * do this after enableLoopbackRecording
+  * @example
+  * device name    : "{\"rtc.audio.mac.loopback.default_output_device\": "Speaker"}"
+*/
+#define KEY_RTC_AUDIO_MAC_LOOPBACK_OUTPUT_DEVICE     "rtc.audio.mac.loopback.default_output_device"
+
+/**
+  * enable/disable allow loopback device change, allow by default
+  * do this before enableLoopbackRecording
+  * @example
+  * enable     : "{\"rtc.audio.mac.loopback.allow_device_change\": true}"
+  * disable    : "{\"rtc.audio.mac.loopback.allow_device_change\": false}"
+*/
+#define KEY_RTC_AUDIO_MAC_LOOPBACK_ALLOW_DEVICE_CHANGE "rtc.audio.mac.loopback.allow_device_change"
+
+/**
   * enable/disable hardware ear monitor, enabled by default
   * @example "{\"rtc.audio.enable_hardware_ear_monitor\":true}"
 */

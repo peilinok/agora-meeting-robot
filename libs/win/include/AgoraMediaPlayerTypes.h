@@ -49,6 +49,7 @@ namespace media {
 
 namespace base {
 static const uint8_t kMaxCharBufferLength = 50;
+static const int kMaxPathLength = 260;
 /**
  * @brief The playback state.
  *
@@ -224,6 +225,12 @@ enum MEDIA_PLAYER_EVENT {
   /** An application can render the video to less than a second
    */
   PLAYER_EVENT_FIRST_DISPLAYED = 13,
+  /** cache resources exceed the maximum file count
+   */
+  PLAYER_EVENT_REACH_CACHE_FILE_MAX_COUNT = 14,
+  /** cache resources exceed the maximum file size
+   */
+  PLAYER_EVENT_REACH_CACHE_FILE_MAX_SIZE = 15
 };
 
 /**
@@ -332,16 +339,57 @@ enum MEDIA_PLAYER_METADATA_TYPE {
   PLAYER_METADATA_TYPE_SEI = 1,
 };
 
-/** Values when user trigger interface of opening
+struct CacheStatistics {
+  /**  total data size of uri
    */
+  int64_t fileSize;
+  /**  data of uri has cached
+   */
+  int64_t cacheSize;
+  /**  data of uri has downloaded
+   */
+  int64_t downloadSize;
+};
+
 struct PlayerUpdatedInfo {
-  /** player_id has value when user trigger interface of opening
+  /** playerId has value when user trigger interface of opening
    */
   Optional<const char*> playerId;
 
-  /** device_id has value when user trigger interface of opening
+  /** deviceId has value when user trigger interface of opening
    */
   Optional<const char*> deviceId;
+
+  /** cacheStatistics exist if you enable cache, triggered 1s at a time after openning url
+   */
+  Optional<CacheStatistics> cacheStatistics;
+};
+
+struct MediaSource {
+  /**
+   * The URL of the media file that you want to play.
+   */
+  char url[kMaxPathLength];
+  /**
+   * The URI of the media file
+   *  
+   * When caching is enabled, if the url cannot distinguish the cache file name, 
+   * the uri must be able to ensure that the cache file name corresponding to the url is unique.
+   */
+  char uri[kMaxPathLength];
+  /** 
+   * Set the starting position for playback, in ms.
+   */
+  int64_t startPos;
+  /**
+   * Enable caching.
+   */
+  bool enableCache;
+
+  MediaSource() : startPos(0), enableCache(false) {
+    memset(url, 0, sizeof(url));
+    memset(uri, 0, sizeof(uri));
+  }
 };
 
 }  // namespace base

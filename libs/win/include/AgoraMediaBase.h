@@ -19,10 +19,6 @@
 #endif
 #endif
 
-#if !defined(__APPLE__)
-#define __deprecated
-#endif
-
 namespace agora {
 namespace rtc {
 
@@ -39,7 +35,8 @@ struct EncodedVideoFrameInfo;
 /**
  * Audio routes.
  */
-enum AudioRoute {
+enum AudioRoute
+{
   /**
    * -1: The default audio route.
    */
@@ -76,15 +73,6 @@ enum AudioRoute {
    * The USB
    */
   ROUTE_USB
-};
-
-enum NLP_AGGRESSIVENESS {
-  NLP_NOT_SPECIFIED = 0,
-  NLP_MILD = 1,
-  NLP_NORMAL = 2,
-  NLP_AGGRESSIVE = 3,
-  NLP_SUPER_AGGRESSIVE = 4,
-  NLP_EXTREME = 5,
 };
 
 /**
@@ -182,6 +170,14 @@ enum MEDIA_SOURCE_TYPE {
    */
   TRANSCODED_VIDEO_SOURCE = 12,
   /**
+   * 13: Video captured by tertiary screen capturer.
+   */
+  TERTIARY_CAMERA_SOURCE = 13,
+  /**
+   * 14: Video captured by quaternary screen capturer.
+   */
+  QUATERNARY_CAMERA_SOURCE = 14,
+  /**
    * 100: Internal Usage only.
    */
   UNKNOWN_MEDIA_SOURCE = 100
@@ -215,34 +211,6 @@ struct PacketOptions {
   PacketOptions()
       : timestamp(0),
         audioLevelIndication(127) {}
-};
-
-enum AUDIO_PROCESSING_CHANNELS {
-  AUDIO_PROCESSING_MONO = 1,
-  AUDIO_PROCESSING_STEREO = 2,
-};
-
-struct AdvancedAudioOptions {
-  AUDIO_PROCESSING_CHANNELS audioProcessingChannels;
-  AdvancedAudioOptions(): audioProcessingChannels(AUDIO_PROCESSING_MONO) {}
-};
-
-/**
- * The detailed information of the incoming audio encoded frame.
- */
-
-struct AudioEncodedFrameInfo {
-  /**
-   * The send time of the packet.
-   */
-  uint64_t sendTs;
-  /**
-   * The codec of the packet.
-   */
-  uint8_t codec;
-  AudioEncodedFrameInfo()
-      : sendTs(0),
-        codec(0) {}
 };
 
 /**
@@ -416,7 +384,7 @@ enum RENDER_MODE_TYPE {
    * @deprecated
    * 3: This mode is deprecated.
    */
-  RENDER_MODE_ADAPTIVE __deprecated = 3,
+  RENDER_MODE_ADAPTIVE = 3,
 };
 
 /**
@@ -574,7 +542,8 @@ struct VideoFrame {
   metadata_buffer(NULL),
   metadata_size(0),
   sharedContext(0),
-  textureId(0){}
+  textureId(0),
+  alphaBuffer(NULL){}
 
   /**
    * The video pixel format: #VIDEO_PIXEL_FORMAT.
@@ -649,6 +618,12 @@ struct VideoFrame {
    * [Texture related parameter], Incoming 4 &times; 4 transformational matrix.
    */
   float matrix[16];
+  /**
+   *  Portrait Segmentation meta buffer, dimension of which is the same as VideoFrame.
+   *  Pixl value is between 0-255, 0 represents totally background, 255 represents totally foreground.
+   *  The default value is NULL
+   */
+  uint8_t* alphaBuffer;
 };
 
 class IVideoFrameObserver {
@@ -663,6 +638,7 @@ class IVideoFrameObserver {
   virtual void onFrame(const VideoFrame* frame) = 0;
   virtual ~IVideoFrameObserver() {}
   virtual bool isExternal() { return true; }
+  virtual VIDEO_PIXEL_FORMAT getVideoPixelFormatPreference() { return VIDEO_PIXEL_UNKNOWN; }
 };
 
 enum MEDIA_PLAYER_SOURCE_TYPE {
@@ -937,7 +913,7 @@ class IVideoFrameObserver {
    *
    * After pre-processing, you can send the processed video data back to the SDK by setting the
    * `videoFrame` parameter in this callback.
-   *
+   * 
    * The video data that this callback gets has not been pre-processed, without the watermark,
    * the cropped content, the rotation, and the image enhancement.
    *
@@ -954,20 +930,21 @@ class IVideoFrameObserver {
    * After you successfully register the video frame observer, the SDK triggers this callback each time
    * when it receives a video frame. In this callback, you can get the video data before encoding. You can then
    * process the data according to your particular scenarios.
-   *
+   * 
    * After processing, you can send the processed video data back to the SDK by setting the
    * `videoFrame` parameter in this callback.
-   *
+   * 
    * The video data that this callback gets has been pre-processed, with its content cropped, rotated, and the image enhanced.
-   *
+   * 
    * @param videoFrame A pointer to the video frame: VideoFrame
    * @return Determines whether to ignore the current video frame if the pre-processing fails:
    * - true: Do not ignore.
    * - false: Ignore, in which case this method does not sent the current video frame to the SDK.
    */
   virtual bool onPreEncodeVideoFrame(VideoFrame& videoFrame) = 0;
-
   virtual bool onSecondaryCameraCaptureVideoFrame(VideoFrame& videoFrame) = 0;
+  virtual bool onTertiaryCameraCaptureVideoFrame(VideoFrame& videoFrame) = 0;
+  virtual bool onQuaternaryCameraCaptureVideoFrame(VideoFrame& videoFrame) = 0;
 
   /**
    * Occurs each time the SDK receives a video frame frome secondary camera before encoding.
@@ -975,18 +952,20 @@ class IVideoFrameObserver {
    * After you successfully register the video frame observer, the SDK triggers this callback each time
    * when it receives a video frame. In this callback, you can get the video data before encoding. You can then
    * process the data according to your particular scenarios.
-   *
+   * 
    * After processing, you can send the processed video data back to the SDK by setting the
    * `videoFrame` parameter in this callback.
-   *
+   * 
    * The video data that this callback gets has been pre-processed, with its content cropped, rotated, and the image enhanced.
-   *
+   * 
    * @param videoFrame A pointer to the video frame: VideoFrame
    * @return Determines whether to ignore the current video frame if the pre-processing fails:
    * - true: Do not ignore.
    * - false: Ignore, in which case this method does not sent the current video frame to the SDK.
    */
   virtual bool onSecondaryPreEncodeCameraVideoFrame(VideoFrame& videoFrame) = 0;
+  virtual bool onTertiaryPreEncodeCameraVideoFrame(VideoFrame& videoFrame) = 0;
+  virtual bool onQuaternaryPreEncodeCameraVideoFrame(VideoFrame& videoFrame) = 0;
 
   /**
    * Occurs each time the SDK receives a video frame captured by the screen.
@@ -1088,11 +1067,11 @@ class IVideoFrameObserver {
    * After you successfully register the video observer, the SDK triggers this callback each time it receives
    * a video frame. You can determine which position to observe by setting the return value. The SDK provides
    * 3 positions for observer. Each position corresponds to a callback function:
-   *
+   * 
    * POSITION_POST_CAPTURER(1 << 0): The position after capturing the video data, which corresponds to the onCaptureVideoFrame callback.
    * POSITION_PRE_RENDERER(1 << 1): The position before receiving the remote video data, which corresponds to the onRenderVideoFrame callback.
    * POSITION_PRE_ENCODER(1 << 2): The position before encoding the video data, which corresponds to the onPreEncodeVideoFrame callback.
-   *
+   * 
    * To observe multiple frame positions, use '|' (the OR operator).
    * This callback observes POSITION_POST_CAPTURER(1 << 0) and POSITION_PRE_RENDERER(1 << 1) by default.
    * To conserve the system consumption, you can reduce the number of frame positions that you want to observe.
@@ -1153,9 +1132,6 @@ struct ContentInspectModule {
 /** Definition of ContentInspectConfig.
  */
 struct ContentInspectConfig {
-/** enable content isnpect function*/
-  bool enable;
-
   /** jh on device.*/
   bool DeviceWork;
 
@@ -1173,48 +1149,17 @@ struct ContentInspectConfig {
   /**The content inspect module count.
    */
   int moduleCount;
-   ContentInspectConfig& operator=(const ContentInspectConfig& rth)
+  ContentInspectConfig& operator=(ContentInspectConfig& rth)
   {
-    enable = rth.enable;
-        DeviceWork = rth.DeviceWork;
-        CloudWork = rth.CloudWork;
-        DeviceworkType = rth.DeviceworkType;
-        extraInfo = rth.extraInfo;
-        moduleCount = rth.moduleCount;
+    DeviceWork = rth.DeviceWork;
+    CloudWork = rth.CloudWork;
+    DeviceworkType = rth.DeviceworkType;
+    extraInfo = rth.extraInfo;
+    moduleCount = rth.moduleCount;
     memcpy(&modules, &rth.modules,  MAX_CONTENT_INSPECT_MODULE_COUNT * sizeof(ContentInspectModule));
     return *this;
   }
-  ContentInspectConfig() : enable(false),DeviceWork(false),CloudWork(true),DeviceworkType(CONTENT_INSPECT_DEVICE_INVALID),extraInfo(NULL), moduleCount(0){}
-};
-struct SnapShotConfig
-{
-    const char* channel;
-    unsigned int uid;
-    const char* filePath;
-    SnapShotConfig& operator=(SnapShotConfig& rth)
-  {
-    channel = rth.channel;
-    uid = rth.uid;
-        filePath = rth.filePath;
-        return *this;
-  }
-    SnapShotConfig():channel(NULL),uid(0), filePath(NULL){
-    }
-};
-class ISnapshotCallback {
- public:
-  /**
-   * @brief snapshot taken callback
-   *
-   * @param channel channel name
-   * @param uid user id
-   * @param filePath image is saveed file path
-   * @param width image width
-   * @param height image height
-   * @param errCode 0 is ok negative is error
-   */
-  virtual void onSnapshotTaken(const char* channel, unsigned int uid, const char* filePath, int width, int height, int errCode) = 0;
-  virtual ~ISnapshotCallback(){};
+  ContentInspectConfig() :DeviceWork(false),CloudWork(true),DeviceworkType(CONTENT_INSPECT_DEVICE_INVALID),extraInfo(NULL), moduleCount(0){}
 };
 
 /**

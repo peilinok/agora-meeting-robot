@@ -102,6 +102,7 @@ void RtcRobot::onJoinChannelSuccess(const char* channel, agora::rtc::uid_t uid,
   int ret = player_->play();
   std::wcout << L"play source ret " << ret << std::endl;
 
+  // engine_->enableMediaPlayerStreamMode(player_->getMediaPlayerId(), true);
   player_->setLoopCount(-1);
   player_->adjustPlayoutVolume(0);
 }
