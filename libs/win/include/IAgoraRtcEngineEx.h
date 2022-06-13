@@ -105,8 +105,6 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
   using IRtcEngineEventHandler::onRemoteAudioTransportStats;
   using IRtcEngineEventHandler::onRemoteVideoTransportStats;
   using IRtcEngineEventHandler::onConnectionStateChanged;
-  using IRtcEngineEventHandler::onWlAccMessage;
-  using IRtcEngineEventHandler::onWlAccStats;
   using IRtcEngineEventHandler::onNetworkTypeChanged;
   using IRtcEngineEventHandler::onEncryptionError;
   using IRtcEngineEventHandler::onUploadLogResult;
@@ -299,7 +297,7 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
     (void)height;
     (void)rotation;
   }
-  /** Reports result of Content Inspect*/
+      /** Reports result of Content Inspect*/
   virtual void onContentInspectResult(media::CONTENT_INSPECT_RESULT result) { (void)result; }
     /** Occurs when takeSnapshot API result is obtained
    *
@@ -307,13 +305,12 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
    * @brief snapshot taken callback
    *
    * @param connection RtcConnection
-   * @param remoteUid user id
    * @param filePath image is saveed file path
    * @param width image width
    * @param height image height
    * @param errCode 0 is ok negative is error
    */
-  virtual void onSnapshotTaken(const RtcConnection& connection, uid_t remoteUid, const char* filePath, int width, int height, int errCode) {
+  virtual void onSnapshotTaken(const RtcConnection& connection, const char* filePath, int width, int height, int errCode) {
     (void)connection;
     (void)filePath;
     (void)width;
@@ -809,30 +806,6 @@ class IRtcEngineEventHandlerEx : public IRtcEngineEventHandler {
     (void)reason;
   }
 
-  /** Occurs when the WIFI message need be sent to the user.
-   * 
-   * @param reason The reason of notifying the user of a message.
-   * @param action Suggest an action for the user.
-   * @param wlAccMsg The message content of notifying the user.
-   */
-  virtual void onWlAccMessage(const RtcConnection& connection, WLACC_MESSAGE_REASON reason, WLACC_SUGGEST_ACTION action, const char* wlAccMsg) {
-    (void)connection;
-    (void)reason;
-    (void)action;
-    (void)wlAccMsg;
-  }
-
-  /** Occurs when SDK statistics wifi acceleration optimization effect.
-   * 
-   * @param currentStats Instantaneous value of optimization effect.
-   * @param averageStats Average value of cumulative optimization effect.
-   */
-  virtual void onWlAccStats(const RtcConnection& connection, WlAccStats currentStats, WlAccStats averageStats) {
-    (void)connection;
-    (void)currentStats;
-    (void)averageStats;
-  }
-
   /** Occurs when the network type is changed.
 
   @param type See #NETWORK_TYPE.
@@ -927,80 +900,6 @@ public:
 
     virtual int setRemoteVideoStreamTypeEx(uid_t uid, VIDEO_STREAM_TYPE streamType, const RtcConnection& connection) = 0;
 
-    /**
-     * Sets the blacklist of subscribe remote stream audio.
-     *
-     * @param uidList The id list of users who do not subscribe to audio.
-     * @param uidNumber The number of uid in uidList.
-     * @param connection RtcConnection.
-     *
-     * @note
-     * If uid is in uidList, the remote user's audio will not be subscribed,
-     * even if muteRemoteAudioStream(uid, false) and muteAllRemoteAudioStreams(false) are operated.
-     *
-     * @return
-     * - 0: Success.
-     * - < 0: Failure.
-     */
-    virtual int setSubscribeAudioBlacklistEx(uid_t* uidList, int uidNumber, const RtcConnection& connection) = 0;
-
-    /**
-     * Sets the whitelist of subscribe remote stream audio.
-     *
-     * @param uidList The id list of users who do subscribe to audio.
-     * @param uidNumber The number of uid in uidList.
-     * @param connection RtcConnection.
-     *
-     * @note
-     * If uid is in uidList, the remote user's audio will be subscribed,
-     * even if muteRemoteAudioStream(uid, true) and muteAllRemoteAudioStreams(true) are operated.
-     *
-     * If a user is in the blacklist and whitelist at the same time, the user will not subscribe to audio.
-     *
-     * @return
-     * - 0: Success.
-     * - < 0: Failure.
-     */
-    virtual int setSubscribeAudioWhitelistEx(uid_t* uidList, int uidNumber, const RtcConnection& connection) = 0;
-
-    /**
-     * Sets the blacklist of subscribe remote stream video.
-     *
-     * @param uidList The id list of users who do not subscribe to video.
-     * @param uidNumber The number of uid in uidList.
-     * @param connection RtcConnection.
-     *
-     * @note
-     * If uid is in uidList, the remote user's video will not be subscribed,
-     * even if muteRemoteVideoStream(uid, false) and muteAllRemoteVideoStreams(false) are operated.
-     *
-     * @return
-     * - 0: Success.
-     * - < 0: Failure.
-     */
-    virtual int setSubscribeVideoBlacklistEx(uid_t* uidList, int uidNumber, const RtcConnection& connection) = 0;
-
-    /**
-     * Sets the whitelist of subscribe remote stream video.
-     *
-     * @param uidList The id list of users who do subscribe to video.
-     * @param uidNumber The number of uid in uidList.
-     * @param connection RtcConnection.
-     *
-     * @note
-     * If uid is in uidList, the remote user's video will be subscribed,
-     * even if muteRemoteVideoStream(uid, true) and muteAllRemoteVideoStreams(true) are operated.
-     *
-     * If a user is in the blacklist and whitelist at the same time, the user will not subscribe to video.
-     *
-     * @return
-     * - 0: Success.
-     * - < 0: Failure.
-     */
-    virtual int setSubscribeVideoWhitelistEx(uid_t* uidList, int uidNumber, const RtcConnection& connection) = 0;
-
-    virtual int setRemoteVideoSubscriptionOptionsEx(uid_t uid, const VideoSubscriptionOptions& options, const RtcConnection& connection) = 0;
-
     virtual int setRemoteVoicePositionEx(uid_t uid, double pan, double gain, const RtcConnection& connection) = 0;
   
     virtual int setRemoteUserSpatialAudioParamsEx(uid_t uid, const agora::SpatialAudioParams& params, const RtcConnection& connection) = 0;
@@ -1091,23 +990,6 @@ public:
                                        const RtcConnection& connection) = 0;
 
     virtual int addPublishStreamUrlEx(const char* url, bool transcodingEnabled, const RtcConnection& connection) = 0;
-    
-    /** 
-     * Turn WIFI acceleration on or off.
-     *    
-     * @note
-     * - This method is called before and after joining a channel.
-     * - Users check the WIFI router app for information about acceleration. Therefore, if this interface is invoked, the caller accepts that the caller's name will be displayed to the user in the WIFI router application on behalf of the caller.
-     *
-     * @param enabled
-     * - true：Turn WIFI acceleration on.
-     * - false：Turn WIFI acceleration off.
-     *
-     * @return
-     * - 0: Success.
-     * - < 0: Failure.
-     */
-    virtual int enableWirelessAccelerate(bool enabled) = 0;
 };
 
 }  // namespace rtc

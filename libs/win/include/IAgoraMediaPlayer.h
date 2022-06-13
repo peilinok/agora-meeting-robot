@@ -50,7 +50,6 @@ public:
   virtual int open(const char* url, int64_t startPos) = 0;
 
   /**
-   * @deprecated
    * @brief Open media file or stream with custom soucrce.
    * @param startPos Set the starting position for playback, in seconds
    * @param observer dataProvider object
@@ -58,16 +57,7 @@ public:
    * - 0: Success.
    * - < 0: Failure.
    */
-  virtual int openWithCustomSource(int64_t startPos,  media::base::IMediaPlayerCustomDataProvider* provider) = 0;
-
-  /**
-   * @brief Open a media file with a media file source.
-   * @param source Media file source that you want to play, see `MediaSource`
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int openWithMediaSource(const media::base::MediaSource &source) = 0;
+  virtual int openWithCustomSource(int64_t startPos, IMediaPlayerCustomDataProvider* provider) = 0;
 
   /**
    * Plays the media file.
@@ -538,120 +528,7 @@ public:
    */
   virtual int setSpatialAudioParams(const SpatialAudioParams& params) = 0;
 
-  /**
-   * Set sound position params for the music file. It can be called after the media player
-   * was created.
-   *
-   *@param pan The sound position of the music file. The value ranges from -1.0 to 1.0:
-   *- 0.0: the music sound comes from the front.
-   *- -1.0: the music sound comes from the left.
-   *- 1.0: the music sound comes from the right.
-   *@param gain Gain of the music. The value ranges from 0.0 to 100.0. The default value is 100.0 (the original gain of the music). The smaller the value, the less the gain.
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int setSoundPositionParams(float pan, float gain) = 0;
-
-};
-
-/**
- * This class is used to set and manage the player cache, implemented in the
- * form of a singleton, independent of the player.
- */
-class IMediaPlayerCacheManager {
-public:
-  /**
-   * Delete the longest used cache file in order to release some of the cache file disk usage.
-   * (usually used when the cache quota notification is received)
-   * 
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int removeAllCaches() = 0;
-  /**
-   * Remove the latest media resource cache file.
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int removeOldCache() = 0;
-  /**
-   * Remove the cache file by uri, setting by MediaSource.
-   * @param uri URI，identify the uniqueness of the property, Set from `MeidaSource`
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int removeCacheByUri(const char *uri) = 0;
-  /**
-   * Set cache file path that files will be saved to.
-   * @param path file path.
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int setCacheDir(const char *path) = 0;
-  /**
-   * Set the maximum number of cached files.
-   * @param count maximum number of cached files.
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int setMaxCacheFileCount(int count) = 0;
-  /**
-   * Set the maximum size of cache file disk usage.
-   * @param cacheSize total size of the largest cache file.
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int setMaxCacheFileSize(int64_t cacheSize) = 0;
-  /**
-   * Whether to automatically delete old cache files when the cache file usage reaches the limit.
-   * @param enable enable the player to automatically clear the cache.
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int enableAutoRemoveCache(bool enable) = 0;
-  /**
-   * Get the cache directory.
-   * @param path cache path, recieve a pointer to be copied to.
-   * @param length the length to be copied.
-   * @return
-   * - 0: Success.
-   * - < 0: Failure.
-   */
-  virtual int getCacheDir(char* path, int length) = 0;
-  /**
-   * Get the maximum number of cached files.
-   * @return
-   * > 0: file count.
-   * - < 0: Failure.
-   */
-  virtual int getMaxCacheFileCount() = 0;
-  /**
-   * Get the total size of the largest cache file
-   * @return
-   * > 0: file size.
-   * - < 0: Failure.
-   */
-  virtual int64_t getMaxCacheFileSize() = 0;
-  /**
-   * Get the number of all cache files.
-   * @return
-   * > 0: file count.
-   * - < 0: Failure.
-   */
-  virtual int getCacheFileCount() = 0;
-
-  virtual ~IMediaPlayerCacheManager(){};
 };
 
 } //namespace rtc
 } // namespace agora
-
-AGORA_API agora::rtc::IMediaPlayerCacheManager* AGORA_CALL getMediaPlayerCacheManager();
