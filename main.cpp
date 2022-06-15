@@ -11,6 +11,7 @@ const wchar_t* KEY_PREFIX = L"prefix";
 const wchar_t* KEY_ELAPSED = L"elapsed";
 const wchar_t* KEY_SOURCE = L"source";
 const wchar_t* KEY_APPID = L"appid";
+const wchar_t* KEY_CERT = L"cert";
 const wchar_t* KEY_AUDIO = L"audio";
 const wchar_t* KEY_VIDEO = L"video";
 
@@ -19,6 +20,8 @@ int main() {
 
   std::wstring appid =
       WinIni::Read(ini_file, KEY_SECTION, KEY_APPID, std::wstring(L""));
+  std::wstring cert =
+      WinIni::Read(ini_file, KEY_SECTION, KEY_CERT, std::wstring(L""));
   std::wstring rid =
       WinIni::Read(ini_file, KEY_SECTION, KEY_RID, std::wstring(L"ROBOT"));
   std::wstring prefix =
@@ -42,7 +45,8 @@ int main() {
              << L" audio:" << pub_audio << L" video:" << pub_video
              << std::endl;
 
-  RtcRobot(appid, rid, prefix, source, pub_audio, pub_video, elapsed).Run();
+  RtcRobot(appid, cert, rid, prefix, source, pub_audio, pub_video, elapsed)
+      .Run();
 
   return 0;
 }

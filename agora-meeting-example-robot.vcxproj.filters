@@ -5,10 +5,51 @@
     <ClCompile Include="ini.cpp" />
     <ClCompile Include="rtc_robot.cpp" />
     <ClCompile Include="strtrans.cpp" />
+    <ClCompile Include="agora\md5\md5.cpp">
+      <Filter>agora\md5</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ini.h" />
     <ClInclude Include="rtc_robot.h" />
     <ClInclude Include="strtrans.h" />
+    <ClInclude Include="agora\AccessToken.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\DynamicKey.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\DynamicKey2.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\DynamicKey3.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\DynamicKey4.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\DynamicKey5.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\Packer.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\RtcTokenBuilder.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\utils.h">
+      <Filter>agora</Filter>
+    </ClInclude>
+    <ClInclude Include="agora\md5\md5.h">
+      <Filter>agora\md5</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="agora">
+      <UniqueIdentifier>{2ec7e04a-e2d1-4d72-ae87-e0c3ebf9456f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="agora\md5">
+      <UniqueIdentifier>{47c0c409-997c-4c72-bc7f-944b67c49435}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

@@ -3,12 +3,15 @@
 #include <iostream>
 #include <thread>
 
+#include "./agora/RtcTokenBuilder.h"
 #include "strtrans.h"
 
-RtcRobot::RtcRobot(const std::wstring& appid, const std::wstring& rid,
-                   const std::wstring& prefix, const std::wstring& source,
-                   bool pub_audio, bool pub_video, const int& elapsed)
+RtcRobot::RtcRobot(const std::wstring& appid, const std::wstring& cert,
+                   const std::wstring& rid, const std::wstring& prefix,
+                   const std::wstring& source, bool pub_audio, bool pub_video,
+                   const int& elapsed)
     : appid_(appid),
+      cert_(cert),
       rid_(rid),
       prefix_(prefix),
       source_(source),
@@ -80,10 +83,21 @@ void RtcRobot::JoinChannel() {
   options.autoSubscribeAudio = false;
   options.autoSubscribeVideo = false;
 
-  std::string utf8_rid = strtrans::unicode_utf8(rid_);
+  uint32_t current_time = time(NULL);
+  uint32_t expired_time =
+      current_time + 60 * 60 * 24;  // expired after 24 hours
 
   agora::rtc::uid_t uid = static_cast<agora::rtc::uid_t>(::GetTickCount());
-  int ret = engine_->joinChannel("", utf8_rid.c_str(), uid, options);
+  std::string utf8_rid = strtrans::unicode_utf8(rid_);
+  std::string utf8_appid = strtrans::unicode_utf8(appid_);
+  std::string utf8_cert = strtrans::unicode_utf8(cert_);
+  std::string utf8_token = agora::tools::RtcTokenBuilder::buildTokenWithUid(
+      utf8_appid, utf8_cert, utf8_rid, uid, agora::tools::Role_Publisher,
+      expired_time);
+
+  
+  int ret =
+      engine_->joinChannel(utf8_token.c_str(), utf8_rid.c_str(), uid, options);
 
   std::wcout << L"join channel with uid " << uid << L" ret " << ret
              << std::endl;
@@ -108,6 +122,10 @@ void RtcRobot::onJoinChannelSuccess(const char* channel, agora::rtc::uid_t uid,
 }
 
 void RtcRobot::onLeaveChannel(const agora::rtc::RtcStats& stats) {}
+
+void RtcRobot::onError(int err, const char* msg) {
+  std::cout << "onError " << err << " " << msg << std::endl;
+}
 
 // IMediaPlayerSourceObserver
 
